@@ -42,38 +42,6 @@ pub fn is_mxlp21_keyboard(descriptor: &dyn MXLP21DeviceDescriptor) -> bool {
     descriptor.vendor_id() == CHERRY && descriptor.product_id() == MXLP21
 }
 
-pub fn show_info(device: &Device<GlobalContext>) {
-    let descriptor = device.device_descriptor().unwrap();
-
-    send_command_wrapper(device, |h| do_show_info(&descriptor, h));
-}
-
-fn do_show_info(descriptor: &DeviceDescriptor, handle: &DeviceHandle<GlobalContext>) {
-    let timeout = std::time::Duration::from_millis(TIMEOUT_MS);
-    let lang = handle.read_languages(timeout).unwrap()[0];
-
-    println!(
-        "Manufacturer: {}",
-        handle
-            .read_manufacturer_string(lang, descriptor, timeout)
-            .unwrap_or_default()
-    );
-
-    println!(
-        "Product:      {}",
-        handle
-            .read_product_string(lang, descriptor, timeout)
-            .unwrap_or_default()
-    );
-
-    println!(
-        "Serial:       {}",
-        handle
-            .read_serial_number_string(lang, descriptor, timeout)
-            .unwrap_or_default()
-    );
-}
-
 fn send_command_wrapper(
     device: &Device<GlobalContext>,
     cmd_fn: impl Fn(&DeviceHandle<GlobalContext>),
@@ -112,18 +80,19 @@ fn send_command_wrapper(
 }
 
 
-pub fn set_color(device: &Device<GlobalContext>, color: u32)  {
+pub fn set_values(device: &Device<GlobalContext>, color: u32, mode: u8, speed: u8)  {
     send_command_wrapper(device, |h| {
-        send_color(h, color);
+        send_values(h, color, mode, speed);
     });
 }
 
-fn send_color(handle: &DeviceHandle<GlobalContext>, color: u32) {
+fn send_values(handle: &DeviceHandle<GlobalContext>, color: u32, mode: u8, speed: u8) {
     let command = format!(
-        "0476020609000055000304020000{:06x}0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "047602060900005500{:02x}04{:02x}0000{:06x}0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        mode,
+        speed,
         color
     );
-
     let _bytes_sent = send_command(handle, &command).unwrap();
 }
 

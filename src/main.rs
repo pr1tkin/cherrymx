@@ -1,18 +1,21 @@
-use cherrymx::commands::{get_command, Run, Successful};
-use cherrymx::mxlp21_keyboard::find_mxlp21_keyboard;
-use std::{env::args, process::ExitCode};
+use gtk::prelude::*;
+use gtk::{ Application, glib};
+use cherrymx::app_state::AppState;
+use cherrymx::app_main_ui;
+use cherrymx::util::css_provider::setup_css_provider;
 
-fn main() -> ExitCode {
-    let device = find_mxlp21_keyboard()
-        .expect("No MX-LP 2.1 Compact Wireless Mechanical Keyboard keyboard found, sorry!");
-    let args = args().skip(1).collect::<Vec<_>>();
 
-    let command = get_command(&args);
-    let cmd_status = command.run(&device);
+const APP_ID: &str = "org.pritkin.cherrymx";
+fn main() -> glib::ExitCode {
+    let app = Application::builder()
+        .application_id(APP_ID)
+        .build();
 
-    if cmd_status.successful() {
-        ExitCode::SUCCESS
-    } else {
-        ExitCode::from(cmd_status as u8)
-    }
+    app.connect_activate(|app| {
+        let app_state = AppState::new();
+        setup_css_provider();
+        app_main_ui::setup_ui(app, app_state);
+    });
+
+    app.run()
 }
