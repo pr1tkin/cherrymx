@@ -1,8 +1,12 @@
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::Receiver;
+use glib::ControlFlow;
 use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow, Button, ColorButton, Grid, Label, Orientation, pango, Separator};
+use gtk::{Application, ApplicationWindow, Button, ColorButton, glib, Grid, Label, Orientation, pango, Separator};
 use gtk::Align::Fill;
 use crate::app_state::AppState;
+use crate::service::hotplug::{HotplugMessage};
 use crate::service::mxlp21_keyboard::{find_mxlp21_keyboard, set_values};
 use crate::util::color::rgba_to_hex;
 use crate::ui::dialog::create_device_not_detected_dialog;
@@ -11,7 +15,8 @@ use crate::widgets::keyboard::create_keyboard_image;
 use crate::widgets::main_content::create_main_content_box;
 use crate::widgets::scale::create_scale_widget;
 
-pub fn setup_ui(app: &Application, app_state: Rc<AppState>) {
+pub fn setup_ui(app: &Application, app_state: Rc<AppState>,  hotplug_receiver: Arc<Mutex<Receiver<HotplugMessage>>>) {
+
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Cherry Utility")
@@ -31,6 +36,26 @@ pub fn setup_ui(app: &Application, app_state: Rc<AppState>) {
     grid.set_valign(Fill);
 
     let dialog = create_device_not_detected_dialog(&window);
+
+    let dialog_clone = dialog.clone();
+    glib::idle_add_local(move || {
+        let receiver = hotplug_receiver.lock().expect("Failed to lock receiver");
+        match receiver.try_recv() {
+            Ok(message) => {
+                match message {
+                    HotplugMessage::DeviceArrived(_) => {
+                        dialog_clone.hide();
+                    },
+                    HotplugMessage::DeviceLeft(_) => {
+                        dialog_clone.show();
+                    },
+                }
+            },
+            Err(_) => {
+            }
+        }
+        ControlFlow::Continue
+    });
 
     match find_mxlp21_keyboard() {
         Some(device) => {

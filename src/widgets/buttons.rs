@@ -25,7 +25,6 @@ pub fn create_buttons(app_state: &AppState) -> gtk::Box {
         ".active { background: #e94b78; color: #fff; }",
     );
 
-    // Ensure the CSS provider is added to the default screen
     gtk::style_context_add_provider_for_display(
         &gdk::Display::default().expect("Could not connect to a display."),
         &provider,
@@ -39,17 +38,14 @@ pub fn create_buttons(app_state: &AppState) -> gtk::Box {
                 let mode_value = app_state.mode_value.clone();
                 let button = Button::with_label(button_labels[j]);
                 button.set_css_classes(&[&format!("color-button-{}", j)]);
-
                 let buttons_clone = app_state.button_modes.clone();
                 button.connect_clicked(move |clicked_button| {
                     *mode_value.borrow_mut() = button_mode[j];
                     for btn in buttons_clone.borrow().iter() {
                         btn.style_context().remove_class("active");
-                        println!("Button: {:?}", btn);
                     }
                     clicked_button.style_context().add_class("active");
                 });
-
                 app_state.button_modes.borrow_mut().push(button.clone());
                 row_box.append(&button);
             }
