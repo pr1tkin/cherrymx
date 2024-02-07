@@ -7,15 +7,17 @@ pub struct AppState {
     pub color_value: Rc<RefCell<u32>>,
     pub scale_value: Rc<RefCell<u8>>,
     pub mode_value: Rc<RefCell<u8>>,
-    pub drawing_area: DrawingArea
+    pub drawing_area: DrawingArea,
+    pub button_modes: Rc<RefCell<Vec<gtk::Button>>>
 }
 
 impl AppState {
     pub fn new() -> AppState {
         AppState {
-            scale_value: Rc::new(RefCell::new(0)),
+            scale_value: Rc::new(RefCell::new(0x02)),
             mode_value: Rc::new(RefCell::new(0)),
             color_value: Rc::new(RefCell::new(0)),
+            button_modes: Rc::new(RefCell::new(Vec::new())),
             drawing_area: DrawingArea::builder()
             .content_width(715)
             .content_height(232)

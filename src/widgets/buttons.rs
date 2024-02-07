@@ -1,5 +1,5 @@
-use gtk::{Button, Label, Orientation, Separator};
-use gtk::prelude::{BoxExt, ButtonExt, WidgetExt};
+use gtk::{Button, CssProvider, gdk, Label, Orientation, Separator, STYLE_PROVIDER_PRIORITY_USER};
+use gtk::prelude::{BoxExt, ButtonExt, StyleContextExt, WidgetExt};
 use crate::app_state::AppState;
 
 pub fn create_buttons(app_state: &AppState) -> gtk::Box {
@@ -20,6 +20,18 @@ pub fn create_buttons(app_state: &AppState) -> gtk::Box {
     button_box.set_css_classes(&["button-container"]);
 
 
+    let provider = CssProvider::new();
+    provider.load_from_data(
+        ".active { background: #e94b78; color: #fff; }",
+    );
+
+    // Ensure the CSS provider is added to the default screen
+    gtk::style_context_add_provider_for_display(
+        &gdk::Display::default().expect("Could not connect to a display."),
+        &provider,
+        STYLE_PROVIDER_PRIORITY_USER,
+    );
+
     for i in (0..button_labels.len()).step_by(2) {
         let row_box = gtk::Box::new(Orientation::Horizontal, 0);
         for j in i..i+2 {
@@ -28,10 +40,17 @@ pub fn create_buttons(app_state: &AppState) -> gtk::Box {
                 let button = Button::with_label(button_labels[j]);
                 button.set_css_classes(&[&format!("color-button-{}", j)]);
 
-                button.connect_clicked(move |_| {
+                let buttons_clone = app_state.button_modes.clone();
+                button.connect_clicked(move |clicked_button| {
                     *mode_value.borrow_mut() = button_mode[j];
+                    for btn in buttons_clone.borrow().iter() {
+                        btn.style_context().remove_class("active");
+                        println!("Button: {:?}", btn);
+                    }
+                    clicked_button.style_context().add_class("active");
                 });
 
+                app_state.button_modes.borrow_mut().push(button.clone());
                 row_box.append(&button);
             }
         }

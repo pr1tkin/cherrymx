@@ -3,7 +3,7 @@ use gtk::{Scale, Adjustment};
 use crate::app_state::AppState;
 
 pub fn create_scale_widget(app_state: &AppState) -> Scale {
-    let adjustment = Adjustment::new(0.0, 0.0, 4.0, 1.0, 1.0, 0.0);
+    let adjustment = Adjustment::new(2.0, 0.0, 4.0, 1.0, 1.0, 0.0);
     let scale = Scale::new(gtk::Orientation::Horizontal, Some(&adjustment));
     scale.set_digits(0);
     scale.set_hexpand(true);
