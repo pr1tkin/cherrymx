@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use gtk::prelude::*;
 use gtk::{ Application, glib};
 use cherrymx::app_state::AppState;
@@ -12,7 +13,7 @@ fn main() -> glib::ExitCode {
         .build();
 
     app.connect_activate(|app| {
-        let app_state = AppState::new();
+        let app_state = Rc::new(AppState::new());
         setup_css_provider();
         app_main_ui::setup_ui(app, app_state);
     });
