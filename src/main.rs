@@ -6,6 +6,7 @@ use cherrymx::app_state::AppState;
 use cherrymx::app_main_ui;
 use cherrymx::service::hotplug::{ setup_hotplug};
 use cherrymx::util::css_provider::setup_css_provider;
+use cherrymx::util::settings::read_settings;
 
 fn main() -> glib::ExitCode {
     let app = gtk::Application::new(Some("org.pritkin.cherrymx"), Default::default());
@@ -16,6 +17,7 @@ fn main() -> glib::ExitCode {
         let app_state = Rc::new(AppState::new());
         setup_css_provider();
         let hotplug_receiver_clone = hotplug_receiver.clone();
+        read_settings(app_state.clone());
         app_main_ui::setup_ui(app, app_state, hotplug_receiver_clone);
     });
 

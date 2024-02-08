@@ -4,4 +4,6 @@ pub mod util;
 pub mod widgets;
 pub mod ui;
 pub mod service;
+pub mod animator;
+pub mod effect;
 

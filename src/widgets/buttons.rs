@@ -1,8 +1,9 @@
+use std::rc::Rc;
 use gtk::{Button, CssProvider, gdk, Label, Orientation, Separator, STYLE_PROVIDER_PRIORITY_USER};
 use gtk::prelude::{BoxExt, ButtonExt, StyleContextExt, WidgetExt};
 use crate::app_state::AppState;
 
-pub fn create_buttons(app_state: &AppState) -> gtk::Box {
+pub fn create_buttons(app_state: Rc<AppState>) -> gtk::Box {
 
     let button_labels = [
         "Wave", "Spectrum", "Breathing", "Rolling",
@@ -22,7 +23,7 @@ pub fn create_buttons(app_state: &AppState) -> gtk::Box {
 
     let provider = CssProvider::new();
     provider.load_from_data(
-        ".active { background: #e94b78; color: #fff; }",
+        ".active { background: #ff0018; color: #fff; font-size: 16px; font-weight: bold;}",
     );
 
     gtk::style_context_add_provider_for_display(
@@ -35,18 +36,23 @@ pub fn create_buttons(app_state: &AppState) -> gtk::Box {
         let row_box = gtk::Box::new(Orientation::Horizontal, 0);
         for j in i..i+2 {
             if j < button_labels.len() {
-                let mode_value = app_state.mode_value.clone();
                 let button = Button::with_label(button_labels[j]);
                 button.set_css_classes(&[&format!("color-button-{}", j)]);
-                let buttons_clone = app_state.button_modes.clone();
+                if *app_state.mode_value.borrow() == button_mode[j] {
+                    button.style_context().add_class("active");
+                }
+                let app_state_clone = app_state.clone();
+                let button_modes_clone = app_state.button_modes.clone();
                 button.connect_clicked(move |clicked_button| {
-                    *mode_value.borrow_mut() = button_mode[j];
-                    for btn in buttons_clone.borrow().iter() {
+                    app_state_clone.update_mode(button_mode[j]);
+
+                    for btn in button_modes_clone.borrow().iter() {
                         btn.style_context().remove_class("active");
                     }
                     clicked_button.style_context().add_class("active");
                 });
-                app_state.button_modes.borrow_mut().push(button.clone());
+
+                app_state.add_button_mode(button.clone());
                 row_box.append(&button);
             }
         }
