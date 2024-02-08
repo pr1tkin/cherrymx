@@ -1,10 +1,16 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::{Button, gdk_pixbuf, Label, Orientation, Overlay, pango, Picture};
 use gtk::cairo::{Context, Operator};
 use gtk::prelude::{BoxExt, DrawingAreaExtManual, WidgetExt};
+use crate::animator::Animator;
 use crate::app_state::AppState;
+use crate::effect::breathing_effect::BreathingEffect;
+use crate::effect::effect::Effect;
+use crate::effect::no_effect::NoEffect;
 
-pub fn create_main_content_box(app_state: &AppState) -> gtk::Box {
+pub fn create_main_content_box(app_state: &Rc<AppState>) -> gtk::Box {
     let large_content_box = gtk::Box::new(Orientation::Vertical, 0);
     large_content_box.set_css_classes(&["content-container"]);
     large_content_box.set_size_request(715, 232);
@@ -19,8 +25,6 @@ pub fn create_main_content_box(app_state: &AppState) -> gtk::Box {
 
     let overlay = Overlay::builder().build();
     overlay.add_overlay(&picture);
-
-    let drawing_area = app_state.drawing_area.clone();
 
     type DrawOperation = Box<dyn Fn(&Context)>;
 
@@ -200,25 +204,54 @@ pub fn create_main_content_box(app_state: &AppState) -> gtk::Box {
         }),
     ];
 
+
     let color_state = app_state.color_value.clone();
-    drawing_area.set_draw_func(move |_, cr, _, _| {
-        let color_value = *color_state.borrow();
-        let red = ((color_value >> 16) & 0xFF) as f64 / 255.0;
-        let green = ((color_value >> 8) & 0xFF) as f64 / 255.0;
-        let blue = (color_value & 0xFF) as f64 / 255.0;
+    let drawing_area_rc = Rc::new(RefCell::new(app_state.drawing_area.clone()));
+    let animator = Animator::new(Rc::new(NoEffect::new()));
+
+    let animator_clone = Rc::clone(&animator);
+    app_state.add_observer(Box::new(move |mode| {
+        let new_effect: Rc<dyn Effect> = match mode {
+            0x00 => Rc::new(BreathingEffect::new(6.0)),
+            _ => Rc::new(NoEffect::new()),
+        };
+
+        println!("Mode: {}", mode);
+        animator_clone.borrow_mut().set_effect(new_effect);
+    }));
+
+
+    let animator_clone = animator.clone();
+    drawing_area_rc.borrow().connect_destroy(move |_| {
+        animator_clone.borrow_mut().stop();
+    });
+
+    let animator_clone = animator.clone();
+    drawing_area_rc.borrow().set_draw_func(move |_, cr, _, _| {
+        let color = *color_state.borrow();
+
+
+        let red = ((color >> 16) & 0xFF) as f64 / 255.0;
+        let green = ((color >> 8) & 0xFF) as f64 / 255.0;
+        let blue = (color & 0xFF) as f64 / 255.0;
         cr.set_operator(Operator::Over);
         cr.set_source_rgba(red, green, blue, 0.5);
         cr.set_line_width(3.0);
+
+        animator_clone.borrow_mut().draw(cr, color);
+
         for draw_op in &draw_operations {
             draw_op(cr);
         }
     });
 
-
+    let drawing_area_rc_clone = drawing_area_rc.clone();
+    animator.borrow_mut().start(drawing_area_rc_clone);
 
     overlay.set_margin_bottom(250);
-    overlay.add_overlay(&drawing_area);
+    overlay.add_overlay(&drawing_area_rc.borrow().clone( ));
     large_content_box.append(&overlay);
+
 
     let label4 = Label::new(Some("MX-LP 2.1 Compact Wireless Mechanical Keyboard"));
     label4.set_css_classes(&["product-title"]);
