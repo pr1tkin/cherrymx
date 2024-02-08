@@ -8,8 +8,9 @@ use gtk::Align::Fill;
 use crate::app_state::AppState;
 use crate::service::hotplug::{HotplugMessage};
 use crate::service::mxlp21_keyboard::{find_mxlp21_keyboard, set_values};
-use crate::util::color::rgba_to_hex;
+use crate::util::color::{hex_to_rgba, rgba_to_hex};
 use crate::ui::dialog::create_device_not_detected_dialog;
+use crate::util::settings::save_settings;
 use crate::widgets::buttons::{create_button_label, create_buttons};
 use crate::widgets::keyboard::create_keyboard_image;
 use crate::widgets::main_content::create_main_content_box;
@@ -104,6 +105,12 @@ fn setup_keyboard_ui(grid: &Grid, app_state: &Rc<AppState>, dialog: &Dialog) {
 
     // Color chooser
     let color_button = ColorButton::new();
+    let initial_color = *app_state.color_value.borrow();
+    if initial_color != 0 {
+        let initial_color = hex_to_rgba(&initial_color).expect("TODO: panic message");
+        color_button.set_rgba(&initial_color);
+    }
+
     let app_state_clone = app_state.clone();
     color_button.connect_color_set(move |color_button| {
         let gdk_rgba = color_button.rgba();
@@ -143,6 +150,7 @@ fn setup_keyboard_ui(grid: &Grid, app_state: &Rc<AppState>, dialog: &Dialog) {
             0
         });
         set_values(&device_clone, color, *app_state_clone.mode_value.borrow(), *app_state_clone.scale_value.borrow());
+        save_settings(&app_state_clone).unwrap();
     });
     button_box.append(&button_apply);
     grid.attach(&button_box, 1, 1, 1, 1);

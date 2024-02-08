@@ -23,7 +23,7 @@ pub fn create_buttons(app_state: Rc<AppState>) -> gtk::Box {
 
     let provider = CssProvider::new();
     provider.load_from_data(
-        ".active { background: #e94b78; color: #fff; }",
+        ".active { background: #ff0018; color: #fff; font-size: 16px; font-weight: bold;}",
     );
 
     gtk::style_context_add_provider_for_display(
@@ -38,7 +38,9 @@ pub fn create_buttons(app_state: Rc<AppState>) -> gtk::Box {
             if j < button_labels.len() {
                 let button = Button::with_label(button_labels[j]);
                 button.set_css_classes(&[&format!("color-button-{}", j)]);
-
+                if *app_state.mode_value.borrow() == button_mode[j] {
+                    button.style_context().add_class("active");
+                }
                 let app_state_clone = app_state.clone();
                 let button_modes_clone = app_state.button_modes.clone();
                 button.connect_clicked(move |clicked_button| {

@@ -5,7 +5,7 @@ use gtk::{Button, gdk_pixbuf, Label, Orientation, Overlay, pango, Picture};
 use gtk::cairo::{Context, Operator};
 use gtk::prelude::{BoxExt, DrawingAreaExtManual, WidgetExt};
 use crate::animator::Animator;
-use crate::app_state::AppState;
+use crate::app_state::{AppState, EventType};
 use crate::effect::breathing_effect::BreathingEffect;
 use crate::effect::effect::Effect;
 use crate::effect::no_effect::NoEffect;
@@ -210,16 +210,21 @@ pub fn create_main_content_box(app_state: &Rc<AppState>) -> gtk::Box {
     let animator = Animator::new(Rc::new(NoEffect::new()));
 
     let animator_clone = Rc::clone(&animator);
-    app_state.add_observer(Box::new(move |mode| {
+    app_state.add_observer(Box::new(move |event_type, mode| {
+        if event_type != EventType::UpdateMode {
+            return;
+        }
         let new_effect: Rc<dyn Effect> = match mode {
             0x00 => Rc::new(BreathingEffect::new(6.0)),
             _ => Rc::new(NoEffect::new()),
         };
-
         println!("Mode: {}", mode);
         animator_clone.borrow_mut().set_effect(new_effect);
     }));
 
+    if *app_state.mode_value.borrow() == 0x00 {
+        animator.borrow_mut().set_effect(Rc::new(BreathingEffect::new(6.0)));
+    }
 
     let animator_clone = animator.clone();
     drawing_area_rc.borrow().connect_destroy(move |_| {
@@ -229,8 +234,6 @@ pub fn create_main_content_box(app_state: &Rc<AppState>) -> gtk::Box {
     let animator_clone = animator.clone();
     drawing_area_rc.borrow().set_draw_func(move |_, cr, _, _| {
         let color = *color_state.borrow();
-
-
         let red = ((color >> 16) & 0xFF) as f64 / 255.0;
         let green = ((color >> 8) & 0xFF) as f64 / 255.0;
         let blue = (color & 0xFF) as f64 / 255.0;

@@ -22,5 +22,10 @@ pub fn create_scale_widget(app_state: &AppState) -> Scale {
         println!("Selected scale value: {:02x}", *scale_value.borrow());
     });
 
+    let initial_scale_value = *app_state.scale_value.borrow();
+    if initial_scale_value != 0 {
+        scale.set_value(initial_scale_value as f64);
+    }
+
     scale
 }
