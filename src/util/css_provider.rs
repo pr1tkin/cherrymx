@@ -2,8 +2,8 @@ use gtk::gdk;
 
 pub fn setup_css_provider() {
     let button_colors = [
-        "#FF5555", "#55FFFF", "#FFFF55", "#FF55FF",
-        "#5555FF", "#55FF55", "#FFFFFF", "#FFAAAA",
+        "#ff8d00", "#55FFFF", "#FFFF55", "#FF55FF",
+        "#5555FF", "#cc00ff", "#FFFFFF", "#FFAAAA",
         "#AAFFAA", "#AAAFFF", "#AAAAAA",
     ];
 

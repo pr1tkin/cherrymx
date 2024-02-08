@@ -46,8 +46,8 @@ impl Animator {
     }
 
     pub fn draw(&self, cr: &Context, color: u32) {
-        let time_elapsed = self.start_time.elapsed().as_secs_f64();
-        let opacity = self.effect.borrow().update_opacity(time_elapsed);
+        let time_elapsed = self.start_time.elapsed();
+        let opacity = self.effect.borrow().update_opacity(time_elapsed.as_secs_f64());
 
         let red = ((color >> 16) & 0xFF) as f64 / 255.0;
         let green = ((color >> 8) & 0xFF) as f64 / 255.0;
@@ -56,6 +56,8 @@ impl Animator {
         cr.set_operator(Operator::Over);
         cr.set_source_rgba(red, green, blue, opacity);
         cr.set_line_width(3.0);
+
+        self.effect.borrow().draw(cr, time_elapsed, color);
     }
 
 }

@@ -1,4 +1,6 @@
 use std::f64::consts::PI;
+use std::time::{Duration};
+use gtk::cairo::{Context};
 use crate::effect::effect::Effect;
 
 pub struct BreathingEffect {
@@ -17,5 +19,8 @@ impl Effect for BreathingEffect {
         let opacity = ((t * 2.0 * PI).sin().powi(2) + 1.0) / 2.0;
         let scaled_opacity = opacity * 0.5;
         scaled_opacity
+    }
+    fn draw(&self, _cr: &Context, _elapsed: Duration, _color: u32) {
+
     }
 }

@@ -9,6 +9,7 @@ use crate::app_state::{AppState, EventType};
 use crate::effect::breathing_effect::BreathingEffect;
 use crate::effect::effect::Effect;
 use crate::effect::no_effect::NoEffect;
+use crate::effect::wave_effect::WaveEffect;
 
 pub fn create_main_content_box(app_state: &Rc<AppState>) -> gtk::Box {
     let large_content_box = gtk::Box::new(Orientation::Vertical, 0);
@@ -198,31 +199,27 @@ pub fn create_main_content_box(app_state: &Rc<AppState>) -> gtk::Box {
             cr.rectangle(602.0, 188.0, 35.0, 35.0);
             cr.stroke().unwrap();
         }),
-        Box::new(|cr: &Context| {
-            cr.rectangle(78.0, 46.0, 562.0, 178.0);
-            cr.fill().unwrap();
-        }),
     ];
 
 
     let color_state = app_state.color_value.clone();
     let drawing_area_rc = Rc::new(RefCell::new(app_state.drawing_area.clone()));
     let animator = Animator::new(Rc::new(NoEffect::new()));
-
     let animator_clone = Rc::clone(&animator);
     app_state.add_observer(Box::new(move |event_type, mode| {
         if event_type != EventType::UpdateMode {
             return;
         }
         let new_effect: Rc<dyn Effect> = match mode {
-            0x00 => Rc::new(BreathingEffect::new(6.0)),
+            0x02 => Rc::new(BreathingEffect::new(6.0)),
+            0x00 => Rc::new(WaveEffect::new(0.5, 12.18245, 0.0385)),
             _ => Rc::new(NoEffect::new()),
         };
         println!("Mode: {}", mode);
         animator_clone.borrow_mut().set_effect(new_effect);
     }));
 
-    if *app_state.mode_value.borrow() == 0x00 {
+    if *app_state.mode_value.borrow() == 0x02 {
         animator.borrow_mut().set_effect(Rc::new(BreathingEffect::new(6.0)));
     }
 
@@ -246,6 +243,10 @@ pub fn create_main_content_box(app_state: &Rc<AppState>) -> gtk::Box {
         for draw_op in &draw_operations {
             draw_op(cr);
         }
+        cr.set_source_rgba(red, green, blue, 0.1);
+        cr.rectangle(78.0, 46.0, 562.0, 178.0);
+        cr.fill().unwrap();
+        cr.set_source_rgba(red, green, blue, 0.5);
     });
 
     let drawing_area_rc_clone = drawing_area_rc.clone();
