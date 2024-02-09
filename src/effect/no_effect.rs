@@ -1,3 +1,5 @@
+use std::time::{Duration};
+use gtk::cairo::{Context};
 use crate::effect::effect::Effect;
 
 
@@ -14,5 +16,8 @@ impl NoEffect {
 impl Effect for NoEffect {
     fn update_opacity(&self, _time_elapsed: f64) -> f64 {
         DEFAULT_OPACITY
+    }
+    fn draw(&self, _cr: &Context, _elapsed: Duration, _color: u32) {
+
     }
 }
