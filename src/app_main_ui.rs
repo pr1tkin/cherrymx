@@ -87,78 +87,79 @@ fn create_keyboard_image_box() -> gtk::Box {
 fn setup_keyboard_ui(grid: &Grid, app_state: &Rc<AppState>, dialog: &Dialog) {
     let device_option = find_mxlp21_keyboard();
     let device_present = device_option.is_some();
-    let device = device_option.unwrap();
+
+    if device_present {
+        let device = device_option.unwrap();
 
 
-    let image_box = create_keyboard_image_box();
-    grid.attach(&image_box, 0, 0, 1, 2);
+        let image_box = create_keyboard_image_box();
+        grid.attach(&image_box, 0, 0, 1, 2);
 
-    let label = create_button_label();
-    grid.attach(&label, 1, 0, 1, 1);
+        let label = create_button_label();
+        grid.attach(&label, 1, 0, 1, 1);
 
-    let button_box = create_buttons(app_state.clone());
+        let button_box = create_buttons(app_state.clone());
 
-    let lighting_color = Label::new(Some("Lighting Color"));
-    lighting_color.set_css_classes(&["lighting-colorpicker-title"]);
-    lighting_color.set_justify(gtk::Justification::Left);
-    button_box.append(&lighting_color);
+        let lighting_color = Label::new(Some("Lighting Color"));
+        lighting_color.set_css_classes(&["lighting-colorpicker-title"]);
+        lighting_color.set_justify(gtk::Justification::Left);
+        button_box.append(&lighting_color);
 
-    // Color chooser
-    let color_button = ColorButton::new();
-    let initial_color = *app_state.color_value.borrow();
-    if initial_color != 0 {
-        let initial_color = hex_to_rgba(&initial_color).expect("TODO: panic message");
-        color_button.set_rgba(&initial_color);
-    }
+        // Color chooser
+        let color_button = ColorButton::new();
+        let initial_color = *app_state.color_value.borrow();
+        if initial_color != 0 {
+            let initial_color = hex_to_rgba(&initial_color).expect("TODO: panic message");
+            color_button.set_rgba(&initial_color);
+        }
 
-    let app_state_clone = app_state.clone();
-    color_button.connect_color_set(move |color_button| {
-        let gdk_rgba = color_button.rgba();
-        let red = (gdk_rgba.red() * 255.0) as u32;
-        let green = (gdk_rgba.green() * 255.0) as u32;
-        let blue = (gdk_rgba.blue() * 255.0) as u32;
-        let alpha = (gdk_rgba.alpha() * 255.0) as u32;
+        let app_state_clone = app_state.clone();
+        color_button.connect_color_set(move |color_button| {
+            let gdk_rgba = color_button.rgba();
+            let red = (gdk_rgba.red() * 255.0) as u32;
+            let green = (gdk_rgba.green() * 255.0) as u32;
+            let blue = (gdk_rgba.blue() * 255.0) as u32;
+            let alpha = (gdk_rgba.alpha() * 255.0) as u32;
 
-        let color_value = (alpha << 24) | (red << 16) | (green << 8) | blue;
-        app_state_clone.update_color(color_value);
-        app_state_clone.drawing_area.queue_draw();
-    });
-    button_box.append(&color_button);
-
-    let separator = Separator::new(gtk::Orientation::Horizontal);
-    button_box.append(&separator);
-
-    let speed_label = Label::new(Some("Speed"));
-    speed_label.set_css_classes(&["button-speed"]);
-    speed_label.set_justify(gtk::Justification::Left);
-    button_box.append(&speed_label);
-
-    let scale = create_scale_widget(&app_state);
-    button_box.append(&scale);
-
-    let button_apply = Button::with_label("Apply");
-    button_apply.set_css_classes(&["button-apply"]);
-
-    let color_button_clone = color_button.clone();
-    let app_state_clone = app_state.clone();
-    let device_clone = device.clone();
-    button_apply.connect_clicked(move |_| {
-        let rgba = color_button_clone.rgba();
-        let hex = rgba_to_hex(rgba);
-        let color: u32 = u32::from_str_radix(&*hex, 16).unwrap_or_else(|_| {
-            eprintln!("Invalid color format. Please provide a hex color code without the '#'.");
-            0
+            let color_value = (alpha << 24) | (red << 16) | (green << 8) | blue;
+            app_state_clone.update_color(color_value);
+            app_state_clone.drawing_area.queue_draw();
         });
-        set_values(&device_clone, color, *app_state_clone.mode_value.borrow(), *app_state_clone.scale_value.borrow());
-        save_settings(&app_state_clone).unwrap();
-    });
-    button_box.append(&button_apply);
-    grid.attach(&button_box, 1, 1, 1, 1);
+        button_box.append(&color_button);
 
-    let main_content = create_main_content_box(app_state);
-    grid.attach(&main_content, 2, 1, 1, 2);
+        let separator = Separator::new(gtk::Orientation::Horizontal);
+        button_box.append(&separator);
 
-    if !device_present {
+        let speed_label = Label::new(Some("Speed"));
+        speed_label.set_css_classes(&["button-speed"]);
+        speed_label.set_justify(gtk::Justification::Left);
+        button_box.append(&speed_label);
+
+        let scale = create_scale_widget(&app_state);
+        button_box.append(&scale);
+
+        let button_apply = Button::with_label("Apply");
+        button_apply.set_css_classes(&["button-apply"]);
+
+        let color_button_clone = color_button.clone();
+        let app_state_clone = app_state.clone();
+        let device_clone = device.clone();
+        button_apply.connect_clicked(move |_| {
+            let rgba = color_button_clone.rgba();
+            let hex = rgba_to_hex(rgba);
+            let color: u32 = u32::from_str_radix(&*hex, 16).unwrap_or_else(|_| {
+                eprintln!("Invalid color format. Please provide a hex color code without the '#'.");
+                0
+            });
+            set_values(&device_clone, color, *app_state_clone.mode_value.borrow(), *app_state_clone.scale_value.borrow());
+            save_settings(&app_state_clone).unwrap();
+        });
+        button_box.append(&button_apply);
+        grid.attach(&button_box, 1, 1, 1, 1);
+
+        let main_content = create_main_content_box(app_state);
+        grid.attach(&main_content, 2, 1, 1, 2);
+    } else  {
         dialog.show();
     }
 }
