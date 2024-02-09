@@ -15,7 +15,7 @@ pub fn create_main_content_box(app_state: &Rc<AppState>) -> gtk::Box {
     let large_content_box = gtk::Box::new(Orientation::Vertical, 0);
     large_content_box.set_css_classes(&["content-container"]);
     large_content_box.set_size_request(715, 232);
-    let pixbuf = Pixbuf::from_file("keyboard-large.png")
+    let pixbuf = Pixbuf::from_file("src/resource/keyboard-large.png")
         .expect("Could not load the image file");
     let scaled_pixbuf = pixbuf.scale_simple(572, 185, gdk_pixbuf::InterpType::Bilinear)
         .expect("Could not scale the image");

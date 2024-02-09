@@ -16,7 +16,7 @@ These resources were instrumental in overcoming initial challenges and served as
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-![UI Screenshot](./cherry-utility.png)
+![UI Screenshot](src/resource/cherry-utility.png)
 
 ### Prerequisites
 
